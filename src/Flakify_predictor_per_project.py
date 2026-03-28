@@ -24,7 +24,8 @@ def set_deterministic(seed):
     torch.backends.cudnn.deterministic = True 
 
 # specify GPU
-device = torch.device("cuda")
+#device = torch.device("cuda")
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 #reading the parameters 
 
@@ -33,6 +34,14 @@ model_weights_path = sys.argv[2]
 results_file = sys.argv[3]
 
 df = pd.read_csv(dataset_path)
+
+# Clear rows in 'flaky' with NaN values; make sure the dtype is int
+print(f"Original dataset size: {len(df)}")
+df = df.dropna(subset=['final_code', 'flaky'])
+df['flaky'] = df['flaky'].astype(int)
+df = df.reset_index(drop=True)
+print(f"Cleaned dataset size: {len(df)}")
+
 input_data = df['final_code'] # use the 'full_code' column to run Flakify using the full code instead of pre-processed code
 target_data = df['flaky']
 df.head()
@@ -62,7 +71,8 @@ def sampling(X_train, y_train, X_valid, y_valid):
 
 
 # defining CodeBERT model
-model_name = "microsoft/codebert-base"
+#model_name = "microsoft/codebert-base"
+model_name = "./codebert-base-local" # There is a syntax mismatch due to recent update in HuggingFace. Therefore we have downloaded the model and used it locally.
 model_config = AutoConfig.from_pretrained(model_name, return_dict=False, output_hidden_states=True)
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 auto_model = AutoModel.from_pretrained(model_name, config=model_config)
