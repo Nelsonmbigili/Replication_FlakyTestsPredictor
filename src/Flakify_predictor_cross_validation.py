@@ -68,7 +68,7 @@ def sampling(X_train, y_train, X_valid, y_valid):
 
 # define CodeBERT model
 #model_name = "microsoft/codebert-base"
-model_name = "./codebert-base-local" # There is a syntax mismatch due to recent update in HuggingFace. Therefore we downloaded the model and used it locally.
+model_name = "./codebert-base-local" # There is a syntax mismatch due to recent update in HuggingFace. Therefore we have downloaded the model and used it locally.
 model_config = AutoConfig.from_pretrained(model_name, return_dict=False, output_hidden_states=True)
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 auto_model = AutoModel.from_pretrained(model_name, config=model_config)
