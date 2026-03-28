@@ -1,0 +1,8 @@
+# Environment
+venv/
+
+# System
+.DS_Store
+
+#folder
+src/codebert-base-local
