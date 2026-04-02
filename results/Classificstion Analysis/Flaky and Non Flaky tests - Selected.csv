@@ -1,0 +1,62 @@
+Non Flaky,,,,,,,,
+project,class_name,test_name,flaky,full_code,preprocessed_code,NoOfTokens for orignal code,tokens of reduced code,final_code
+elastic-job-lite,DataflowJobExecutorTest,assertExecuteWhenFetchDataIsNotEmptyForStreamingProcessAndMultipleShardingItems,0,"@SuppressWarnings(""unchecked"") @Test public void assertExecuteWhenFetchDataIsNotEmptyForStreamingProcessAndMultipleShardingItems(){
+  setUp(true,ShardingContextsBuilder.getMultipleShardingContexts());
+  when(jobCaller.fetchData(0)).thenReturn(Collections.<Object>singletonList(1),Collections.emptyList());
+  when(jobCaller.fetchData(1)).thenReturn(Collections.<Object>singletonList(2),Collections.emptyList());
+  when(jobFacade.isEligibleForJobRunning()).thenReturn(true);
+  dataflowJobExecutor.execute();
+  verify(jobCaller,times(2)).fetchData(0);
+  verify(jobCaller,times(2)).fetchData(1);
+  verify(jobCaller).processData(1);
+  verify(jobCaller).processData(2);
+}
+","@SuppressWarnings(""unchecked"") @Test public void assertExecuteWhenFetchDataIsNotEmptyForStreamingProcessAndMultipleShardingItems(){
+}",219,36,"@SuppressWarnings(""unchecked"") @Test public void assertExecuteWhenFetchDataIsNotEmptyForStreamingProcessAndMultipleShardingItems(){
+  setUp(true,ShardingContextsBuilder.getMultipleShardingContexts());
+  when(jobCaller.fetchData(0)).thenReturn(Collections.<Object>singletonList(1),Collections.emptyList());
+  when(jobCaller.fetchData(1)).thenReturn(Collections.<Object>singletonList(2),Collections.emptyList());
+  when(jobFacade.isEligibleForJobRunning()).thenReturn(true);
+  dataflowJobExecutor.execute();
+  verify(jobCaller,times(2)).fetchData(0);
+  verify(jobCaller,times(2)).fetchData(1);
+  verify(jobCaller).processData(1);
+  verify(jobCaller).processData(2);
+}
+"
+,,,,,,,,
+spring-boot,ConfigFileApplicationListenerTests,randomValue,0,"@Test public void randomValue() throws Exception {
+  this.initializer.onApplicationEvent(this.event);
+  String property=this.environment.getProperty(""random.value"");
+  assertThat(property,notNullValue());
+}
+","@Test public void randomValue() throws Exception {
+assertThat(property,notNullValue());
+}",55,23,"@Test public void randomValue() throws Exception {
+  this.initializer.onApplicationEvent(this.event);
+  String property=this.environment.getProperty(""random.value"");
+  assertThat(property,notNullValue());
+}
+"
+,,,,,,,,
+Flaky,,,,,,,,
+project,class_name,test_name,flaky,full_code,preprocessed_code,NoOfTokens for orignal code,tokens of reduced code,final_code
+,,,,,,,,
+spring-boot,StarterDependenciesIntegrationTests,oldSpringModulesAreNotTransitiveDependencies,1,"@Test public void oldSpringModulesAreNotTransitiveDependencies() throws IOException {
+  runBuildForTask(""checkSpring"");
+}
+","@Test public void oldSpringModulesAreNotTransitiveDependencies() throws IOException {
+}",33,22,"@Test public void oldSpringModulesAreNotTransitiveDependencies() throws IOException {
+  runBuildForTask(""checkSpring"");
+}
+"
+,,,,,,,,
+wro4j,TestRubySassEngine,cannotProcessInvalidCss,1,"@Test(expected=WroRuntimeException.class) public void cannotProcessInvalidCss(){
+  Assert.assertEquals(StringUtils.EMPTY,engine.process(""invalidCss""));
+}
+","@Test(expected=WroRuntimeException.class) public void cannotProcessInvalidCss(){
+Assert.assertEquals(StringUtils.EMPTY,engine.process(""invalidCss""));
+}",49,48,"@Test(expected=WroRuntimeException.class) public void cannotProcessInvalidCss(){
+  Assert.assertEquals(StringUtils.EMPTY,engine.process(""invalidCss""));
+}
+"
