@@ -1,0 +1,564 @@
+project,class_name,test_name,final_code,flaky
+FlakyCat,PersistentTopicsTest,testPeekWithSubscriptionNameNotExist,"public void testPeekWithSubscriptionNameNotExist() throws Exception {
+    final String topicName = ""testTopic"";
+    final String topic = TopicName.get(persistent.value(), testTenant, testNamespace, topicName).toString();
+    final String subscriptionName = ""sub"";
+    ((TopicsImpl) (admin.topics())).createPartitionedTopicAsync(topic, 3, true).get();
+    final String partitionedTopic = topic + ""-partition-0"";
+    Producer<String> producer = pulsarClient.newProducer(STRING).topic(topic).create();
+    for (int i = 0; i < 100; ++i) {
+        producer.send(""test"" + i);
+    }
+    List<Message<byte[]>> messages = admin.topics().peekMessages(partitionedTopic, subscriptionName, 5);
+    Assert.assertEquals(messages.size(), 5);
+    producer.close();
+}",1
+FlakyCat,Unknown,testSetCallbackWithNull,"
+    public void testSetCallbackWithNull() throws Exception {
+        mSession.setActive(true);
+        mCallback.reset(1);
+        mSession.setCallback(null, mHandler);
+        assertEquals(""Callback shouldn't be called."", 0, mCallback.mOnPlayCalledCount);
+    }",1
+FlakyCat,TestExchangeClient,testAddLocation,"public void testAddLocation() throws Exception {
+    DataSize maxResponseSize = DataSize.of(10, MEGABYTE);
+    MockExchangeRequestProcessor processor = new MockExchangeRequestProcessor(maxResponseSize);
+    TaskId task1 = new TaskId(new StageId(""query"", 1), 0, 0);
+    TaskId task2 = new TaskId(new StageId(""query"", 1), 1, 0);
+    TaskId task3 = new TaskId(new StageId(""query"", 1), 2, 0);
+    URI location1 = URI.create(""http:www.example1.com"");
+    URI location2 = URI.create(""http:www.example2.com"");
+    URI location3 = URI.create(""http:www.example3.com"");
+    processor.addPage(location1, createSerializedPage(1));
+    processor.addPage(location1, createSerializedPage(2));
+    TestingExchangeClientBuffer buffer = new TestingExchangeClientBuffer(DataSize.of(1, MEGABYTE));
+    @SuppressWarnings(""resource"")
+    ExchangeClient exchangeClient = new ExchangeClient(""localhost"", DataIntegrityVerification.ABORT, buffer, maxResponseSize, 1, new Duration(1, TimeUnit.MINUTES), true, new TestingHttpClient(processor, scheduler), scheduler, new SimpleLocalMemoryContext(newSimpleAggregatedMemoryContext(), ""test""), pageBufferClientCallbackExecutor, ( taskId, failure) -> {
+    });
+    assertThat(buffer.getAllTasks()).isEmpty();
+    assertThat(buffer.getPages().asMap()).isEmpty();
+    assertThat(buffer.getFinishedTasks()).isEmpty();
+    assertThat(buffer.getFailedTasks().asMap()).isEmpty();
+    assertFalse(buffer.isNoMoreTasks());
+    exchangeClient.addLocation(task1, location1);
+    assertThat(buffer.getAllTasks()).containsExactly(task1);
+    assertTaskIsNotFinished(buffer, task1);
+    processor.setComplete(location1);
+    buffer.whenTaskFinished(task1).get(10, SECONDS);
+    assertThat(buffer.getPages().get(task1)).hasSize(2);
+    assertThat(buffer.getFinishedTasks()).containsExactly(task1);
+    exchangeClient.addLocation(task2, location2);
+    assertThat(buffer.getAllTasks()).containsExactlyInAnyOrder(task1, task2);
+    assertTaskIsNotFinished(buffer, task2);
+    processor.setComplete(location2);
+    buffer.whenTaskFinished(task2).get(10, SECONDS);
+    assertThat(buffer.getFinishedTasks()).containsExactlyInAnyOrder(task1, task2);
+    assertThat(buffer.getPages().get(task2)).hasSize(0);
+    exchangeClient.addLocation(task3, location3);
+    assertThat(buffer.getAllTasks()).containsExactlyInAnyOrder(task1, task2, task3);
+    assertTaskIsNotFinished(buffer, task3);
+    exchangeClient.noMoreLocations();
+    assertTrue(buffer.isNoMoreTasks());
+    assertThat(buffer.getAllTasks()).containsExactlyInAnyOrder(task1, task2, task3);
+    assertTaskIsNotFinished(buffer, task3);
+    exchangeClient.close();
+    assertEventually(() -> assertEquals(exchangeClient.getStatus().getPageBufferClientStatuses().get(0).getHttpRequestState(), ""not scheduled"", ""httpRequestState""));
+    assertEventually(() -> assertEquals(exchangeClient.getStatus().getPageBufferClientStatuses().get(1).getHttpRequestState(), ""not scheduled"", ""httpRequestState""));
+    assertEventually(() -> assertEquals(exchangeClient.getStatus().getPageBufferClientStatuses().get(2).getHttpRequestState(), ""not scheduled"", ""httpRequestState""));
+    assertThat(buffer.getFinishedTasks()).containsExactlyInAnyOrder(task1, task2, task3);
+    assertThat(buffer.getFailedTasks().asMap()).isEmpty();
+    assertTrue(exchangeClient.isFinished());
+}",1
+FlakyCat,WorkflowClientTestRun,testWorkflowClient," @Test
+  public void testWorkflowClient() throws Exception {
+    String outputPath = new File(tmpFolder.newFolder(), ""output"").getAbsolutePath();
+    Map<String, String> runtimeArgs = ImmutableMap.of(""inputPath"", createInput(""input""),
+                                                      ""outputPath"", outputPath);
+    Id.Workflow workflowId = Id.Workflow.from(appId, AppWithWorkflow.SampleWorkflow.NAME);
+    programClient.start(workflowId, false, runtimeArgs);
+    programClient.waitForStatus(workflowId, ""STOPPED"", 60, TimeUnit.SECONDS);
+
+    List<RunRecord> workflowRuns = programClient.getProgramRuns(workflowId, ProgramRunStatus.COMPLETED.name(), 0,
+                                                                Long.MAX_VALUE, 10);
+    Assert.assertEquals(1, workflowRuns.size());
+    Id.Run workflowRunId = new Id.Run(workflowId, workflowRuns.get(0).getPid());
+
+    try {
+      workflowClient.getWorkflowToken(new Id.Run(Id.Workflow.from(appId, ""random""), workflowRunId.getId()));
+      Assert.fail(""Should not find a workflow token for a non-existing workflow"");
+    } catch (NotFoundException expected) {
+  
+    }
+    try {
+      workflowClient.getWorkflowToken(new Id.Run(workflowId, RunIds.generate().getId()));
+      Assert.fail(""Should not find a workflow token for a random run id"");
+    } catch (NotFoundException expected) {
+ 
+    }
+
+    WorkflowTokenDetail workflowToken = workflowClient.getWorkflowToken(workflowRunId);
+    Assert.assertEquals(3, workflowToken.getTokenData().size());
+    workflowToken = workflowClient.getWorkflowToken(workflowRunId, WorkflowToken.Scope.SYSTEM);
+    Assert.assertTrue(workflowToken.getTokenData().size() > 0);
+    workflowToken = workflowClient.getWorkflowToken(workflowRunId, ""start_time"");
+    Map<String, List<WorkflowTokenDetail.NodeValueDetail>> tokenData = workflowToken.getTokenData();
+    Assert.assertEquals(AppWithWorkflow.WordCountMapReduce.NAME, tokenData.get(""start_time"").get(0).getNode());
+    Assert.assertTrue(Long.parseLong(tokenData.get(""start_time"").get(0).getValue()) < System.currentTimeMillis());
+    workflowToken = workflowClient.getWorkflowToken(workflowRunId, WorkflowToken.Scope.USER, ""action_type"");
+    tokenData = workflowToken.getTokenData();
+    Assert.assertEquals(AppWithWorkflow.WordCountMapReduce.NAME, tokenData.get(""action_type"").get(0).getNode());
+    Assert.assertEquals(""MapReduce"", tokenData.get(""action_type"").get(0).getValue());
+    String nodeName = AppWithWorkflow.SampleWorkflow.firstActionName;
+    WorkflowTokenNodeDetail workflowTokenAtNode =
+      workflowClient.getWorkflowTokenAtNode(workflowRunId, nodeName);
+    Assert.assertEquals(AppWithWorkflow.DummyAction.TOKEN_VALUE,
+                        workflowTokenAtNode.getTokenDataAtNode().get(AppWithWorkflow.DummyAction.TOKEN_KEY));
+    workflowTokenAtNode = workflowClient.getWorkflowTokenAtNode(workflowRunId, nodeName, WorkflowToken.Scope.SYSTEM);
+    Assert.assertEquals(0, workflowTokenAtNode.getTokenDataAtNode().size());
+    workflowTokenAtNode = workflowClient.getWorkflowTokenAtNode(workflowRunId, nodeName,
+                                                                AppWithWorkflow.DummyAction.TOKEN_KEY);
+    Assert.assertEquals(AppWithWorkflow.DummyAction.TOKEN_VALUE,
+                        workflowTokenAtNode.getTokenDataAtNode().get(AppWithWorkflow.DummyAction.TOKEN_KEY));
+    String reduceOutputRecordsCounter = ""org.apache.hadoop.mapreduce.TaskCounter.REDUCE_OUTPUT_RECORDS"";
+    workflowTokenAtNode = workflowClient.getWorkflowTokenAtNode(workflowRunId, AppWithWorkflow.WordCountMapReduce.NAME,
+                                                                WorkflowToken.Scope.SYSTEM, reduceOutputRecordsCounter);
+    Assert.assertEquals(6, Integer.parseInt(workflowTokenAtNode.getTokenDataAtNode().get(reduceOutputRecordsCounter)));
+  }",1
+FlakyCat,TestUnderReplicatedBlocks,testSetrepIncWithUnderReplicatedBlocks,"public void testSetrepIncWithUnderReplicatedBlocks() throws Exception {
+    Configuration conf = new HdfsConfiguration();
+    final short REPLICATION_FACTOR = 2;
+    final String FILE_NAME = ""/testFile"";
+    final Path FILE_PATH = new Path(FILE_NAME);
+    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(REPLICATION_FACTOR + 1).build();
+    try {
+        final FileSystem fs = cluster.getFileSystem();
+        DFSTestUtil.createFile(fs, FILE_PATH, 1L, REPLICATION_FACTOR, 1L);
+        DFSTestUtil.waitReplication(fs, FILE_PATH, REPLICATION_FACTOR);
+        final BlockManager bm = cluster.getNamesystem().getBlockManager();
+        ExtendedBlock b = DFSTestUtil.getFirstBlock(fs, FILE_PATH);
+        DatanodeDescriptor dn = bm.blocksMap.nodeIterator(b.getLocalBlock()).next();
+        bm.addToInvalidates(b.getLocalBlock(), dn);
+        bm.blocksMap.removeNode(b.getLocalBlock(), dn);
+        FsShell shell = new FsShell(conf);
+        assertEquals(0, shell.run(new String[]{ ""-setrep"", ""-w"", Integer.toString(1 + REPLICATION_FACTOR), FILE_NAME }));
+    } finally {
+        cluster.shutdown();
+    }
+}
+",1
+FlakyCat,KafkaAuthorizationTestBase,testProduceWithTopicLevelPermissions,"public void testProduceWithTopicLevelPermissions() throws PulsarAdminException, ExecutionException, InterruptedException {
+    String topic = ""testTopicLevelPermissions"";
+    String fullNewTopicName = admin.topics().grantPermission(fullNewTopicName, ANOTHER_USER, Sets.newHashSet(produce));
+    @Cleanup
+    KProducer producer = new KProducer(fullNewTopicName, false, ""localhost"", getKafkaBrokerPort(), (TENANT + ""/"") + NAMESPACE, ""token:"" + anotherToken);
+    int totalMsgs = 10;
+    String messageStrPrefix = fullNewTopicName + ""_message_"";
+    for (int i = 0; i < totalMsgs; i++) {
+        String messageStr = messageStrPrefix + i;
+        producer.getProducer().send(new ProducerRecord<>(fullNewTopicName, i, messageStr)).get();
+    }
+    @Cleanup
+    KConsumer adminConsumer = new KConsumer(fullNewTopicName, ""localhost"", getKafkaBrokerPort(), false, (TENANT + ""/"") + NAMESPACE, ""token:"" + adminToken, ""DemoAdminKafkaOnPulsarConsumer"");
+    adminConsumer.getConsumer().subscribe(Collections.singleton(fullNewTopicName));
+    int i = 0;
+    while (i < totalMsgs) {
+        ConsumerRecords<Integer, String> records = adminConsumer.getConsumer().poll(Duration.ofSeconds(1));
+        for (ConsumerRecord<Integer, String> record : records) {
+            Integer key = record.key();
+            assertEquals(messageStrPrefix + key.toString(), record.value());
+            i++;
+        }
+    } 
+    assertEquals(i, totalMsgs);
+    ConsumerRecords<Integer, String> records = adminConsumer.getConsumer().poll(Duration.ofMillis(200));
+    assertTrue(records.isEmpty());
+    @Cleanup
+    KConsumer anotherConsumer = new KConsumer(fullNewTopicName, ""localhost"", getKafkaBrokerPort(), false, (TENANT + ""/"") + NAMESPACE, ""token:"" + anotherToken, ""DemoAnotherKafkaOnPulsarConsumer"");
+    anotherConsumer.getConsumer().subscribe(Collections.singleton(fullNewTopicName));
+    try {
+        anotherConsumer.getConsumer().poll(Duration.ofSeconds(2));
+        fail(""expected TopicAuthorizationException"");
+    } catch (TopicAuthorizationException ignore) {
+        log.info(""Has TopicAuthorizationException."");
+    }
+}",1
+FlakyCat,Unknown,testNodeMetricsDb,"public void testNodeMetricsDb() {
+        ManualClock clock = new ManualClock();
+        NodeMetricsDb db = new NodeMetricsDb();
+        List<NodeMetrics.MetricValue> values = new ArrayList<>();
+        for (int i = 0; i < 40; i++) {
+            values.add(new NodeMetrics.MetricValue(""host0"", ""cpu.util"", clock.instant().getEpochSecond(), 0.9f));
+            clock.advance(Duration.ofHours(1));
+        }
+        db.add(values);
+        assertEquals(29, db.getWindow(clock.instant().minus(Duration.ofHours(30)), Resource.cpu,    List.of(""host0"")).measurementCount());
+        assertEquals( 0, db.getWindow(clock.instant().minus(Duration.ofHours(30)), Resource.memory, List.of(""host0"")).measurementCount());
+        db.gc(clock);
+        assertEquals(23, db.getWindow(clock.instant().minus(Duration.ofHours(30)), Resource.cpu,    List.of(""host0"")).measurementCount());
+        assertEquals( 0, db.getWindow(clock.instant().minus(Duration.ofHours(30)), Resource.memory, List.of(""host0"")).measurementCount());
+    }",1
+FlakyCat,b19048b72669fc0e96665b1b125dc1fda21f5993,testCompositeBindingUpdate,"public void testCompositeBindingUpdate() throws Exception {
+    final KernelServices services = createKernelServicesBuilder(createAdditionalInitialization()).setSubsystemXml(getSubsystemXml()).build();
+    
+    final ModelNode addr = Operations.createAddress(ModelDescriptionConstants.SUBSYSTEM, NamingExtension.SUBSYSTEM_NAME, NamingSubsystemModel.BINDING, ""java:global/a"");
+    final ModelNode compositeOp = Operations.CompositeOperationBuilder.create()
+            .addStep(Operations.createWriteAttributeOperation(addr, NamingSubsystemModel.BINDING_TYPE, NamingSubsystemModel.LOOKUP))
+            .addStep(Operations.createWriteAttributeOperation(addr, NamingSubsystemModel.LOOKUP, ""java:global/b""))
+            .build().getOperation();
+    ModelTestUtils.checkOutcome(services.executeOperation(compositeOp));
+}",1
+FlakyCat,MalformedDataAfterHttpMessageTest,afterResponseNextClientRequestSucceeds,"void afterResponseNextClientRequestSucceeds() throws Exception {
+    Queue<ConnectionContext> contextQueue = new ArrayBlockingQueue<>(4);
+    ServerSocketChannel server = nettyServer(RESPONSE_MSG);
+    try (final BlockingHttpClient client = stClientBuilder(server.localAddress()).appendConnectionFilter(( connection) -> new StreamingHttpConnectionFilter(connection) {
+        @Override
+        public Single<StreamingHttpResponse> request(final HttpExecutionStrategy strategy, final StreamingHttpRequest request) {
+            contextQueue.add(connectionContext());
+            return super.request(strategy, request);
+        }
+    }).buildBlocking()) {
+        validateClientResponse(client.request(client.get(""/1"")));
+        validateClientResponse(client.request(client.get(""/2"")));
+        ConnectionContext ctx1 = contextQueue.poll();
+        assertThat(ctx1, not(nullValue()));
+        ConnectionContext ctx2 = contextQueue.poll();
+        assertThat(ctx2, not(nullValue()));
+        assertThat(ctx1, not(equalTo(ctx2)));
+        assertThat(contextQueue, empty());
+    } finally {
+        server.close().sync();
+    }
+}",1
+FlakyCat,ProgramLifecycleHttpHandlerTest,testStartProgramWithDisabledRuntimeArgs,"@Test
+  public void testStartProgramWithDisabledRuntimeArgs() throws Exception {
+
+    ProfileId profileId = new NamespaceId(TEST_NAMESPACE1).profile(""MyProfile"");
+    Profile profile = new Profile(""MyProfile"", Profile.NATIVE.getLabel(), Profile.NATIVE.getDescription(),Profile.NATIVE.getScope(), Profile.NATIVE.getProvisioner());
+    putProfile(profileId, profile, 200);
+    disableProfile(profileId, 200);
+    deploy(AppWithWorkflow.class, 200, Constants.Gateway.API_VERSION_3_TOKEN,TEST_NAMESPACE1);
+    ProgramId programId = new NamespaceId(TEST_NAMESPACE1).app(APP_WITH_WORKFLOW_APP_ID).workflow(APP_WITH_WORKFLOW_WORKFLOW_NAME);
+    Assert.assertEquals(STOPPED, getProgramStatus(programId));
+    startProgram(programId, Collections.singletonMap(SystemArguments.PROFILE_NAME, profileId.getScopedName()), 409);
+    Assert.assertEquals(STOPPED, getProgramStatus(programId));
+    startProgram(programId, Collections.singletonMap(SystemArguments.PROFILE_NAME, ProfileId.NATIVE.getScopedName()),200);
+    waitState(programId, STOPPED);
+  }",1
+FlakyCat,Unknown,test_parseLString,"public void test_parseLString() throws Exception {
+        DateFormat format = DateFormat.getDateTimeInstance(DateFormat.FULL, DateFormat.FULL, Locale.US);
+	try {
+            Date date = format.parse(format.format(current).toString());
+            assertEquals(current.getDate(), date.getDate());
+            assertEquals(current.getDay(), date.getDay());
+            assertEquals(current.getMonth(), date.getMonth());
+            assertEquals(current.getYear(), date.getYear());
+            assertEquals(current.getHours(), date.getHours());
+            assertEquals(current.getMinutes(), date.getMinutes());
+        } catch(ParseException pe) {
+            fail(""ParseException was thrown for current Date.""); }
+  	try {
+            format.parse(""January 16, 1970 8:03:52 PM CET"");
+            fail(""ParseException was not thrown."");
+        } catch(ParseException pe) { }
+
+       }",1
+FlakyCat,b19048b72669fc0e96665b1b125dc1fda21f5993,testLookupWithContinuation,"public void testLookupWithContinuation() throws Exception {
+    namingStore.bind(new CompositeName(""comp/nested""), ""test"");
+    final Reference reference = new Reference(String.class.getName(), new StringRefAddr(""nns"", ""comp""), TestObjectFactoryWithNameResolution.class.getName(), null);
+    namingStore.bind(new CompositeName(""test""), reference);
+    Object result = namingContext.lookup(new CompositeName(""test/nested""));
+    assertEquals(""test"", result);
+    result = testActionPermission(JndiPermission.ACTION_LOOKUP, Arrays.asList(new JndiPermission(""comp/nested"", ""lookup"")), namingContext, ""test/nested"");
+    assertEquals(""test"", result);
+}",1
+FlakyCat,DatabaseFieldConfigTest,testFromDbField,"public void testFromDbField() throws Exception {
+    Field[] fields = Foo.class.getDeclaredFields();
+    assertTrue(fields.length >= 1);
+    DatabaseFieldConfig config = DatabaseFieldConfig.fromField(databaseType, ""foo"", fields[0]);
+    assertNotNull(config);
+    assertTrue(config.isCanBeNull());
+    assertEquals(fields[0].getName(), config.getFieldName());
+}",1
+FlakyCat,BacklogQuotaManagerTest,testConsumerBacklogEvictionTimeQuotaWithEmptyLedger,"public void testConsumerBacklogEvictionTimeQuotaWithEmptyLedger() throws Exception {
+    assertEquals(admin.namespaces().getBacklogQuotaMap(""prop/ns-quota""), Maps.newHashMap());
+    admin.namespaces().setBacklogQuota(""prop/ns-quota"", BacklogQuota.builder().limitTime(TIME_TO_CHECK_BACKLOG_QUOTA).retentionPolicy(consumer_backlog_eviction).build(), message_age);
+    PulsarClient client = PulsarClient.builder().serviceUrl(adminUrl.toString()).statsInterval(0, TimeUnit.SECONDS).build();
+    final String topic = ""persistent"";
+    final String subName = ""c1"";
+    Consumer<byte[]> consumer = client.newConsumer().topic(topic).subscriptionName(subName).subscribe();
+    Producer<byte[]> producer = createProducer(client, topic);
+    producer.send(new byte[1024]);
+    consumer.receive();
+    admin.topics().unload(topic);
+    PersistentTopicInternalStats internalStats = admin.topics().getInternalStats(topic);
+    assertEquals(internalStats.ledgers.size(), 2);
+    assertEquals(internalStats.ledgers.get(1).entries, 0);
+    TopicStats stats = admin.topics().getStats(topic);
+    assertEquals(stats.getSubscriptions().get(subName).getMsgBacklog(), 1);
+    TimeUnit.SECONDS.sleep(TIME_TO_CHECK_BACKLOG_QUOTA);
+    Awaitility.await().pollInterval(Duration.ofSeconds(1)).atMost(Duration.ofSeconds(TIME_TO_CHECK_BACKLOG_QUOTA)).untilAsserted(() -> {
+        rolloverStats();
+        PersistentTopicInternalStats latestInternalStats = admin.topics().getInternalStats(topic);
+        assertEquals(latestInternalStats.ledgers.size(), 2);
+        assertEquals(latestInternalStats.ledgers.get(1).entries, 0);
+        TopicStats latestStats = admin.topics().getStats(topic);
+        assertEquals(latestStats.getSubscriptions().get(subName).getMsgBacklog(), 0);
+    });
+    client.close();
+}",1
+FlakyCat,Unknown,testOneTimeRequest_noInitialDelay,"
+    public void testOneTimeRequest_noInitialDelay() {
+        val request = OneTimeWorkRequestBuilder<TestWorker>().build(); 
+        val task = mTaskConverter.convert(request.workSpec); 
+        assertEquals(task.serviceName, WorkManagerGcmService::class.java.name); 
+        assertEquals(task.isPersisted, false); 
+        assertEquals(task.isUpdateCurrent, true); 
+        assertEquals(task.requiredNetwork, Task.NETWORK_STATE_ANY); 
+        assertEquals(task.requiresCharging, false); 
+        assertEquals(task.windowStart, 0L); 
+        assertEquals(task.windowEnd, 0L + EXECUTION_WINDOW_SIZE_IN_SECONDS); 
+    }",1
+FlakyCat,Unknown,shouldTerminateWhenFutureIsCancelled,"public void shouldTerminateWhenFutureIsCancelled() throws InterruptedException {
+
+        GracefulExecutorServicesShutdown shutdown = GracefulExecutorServicesShutdown.initiate();
+        shutdown.timeout(Duration.ofMillis(15000));
+        ExecutorService executorService = mock(ExecutorService.class);
+        when(executorService.isShutdown()).thenReturn(true);
+        AtomicBoolean terminated = new AtomicBoolean();
+        AtomicBoolean awaitTerminationInterrupted = new AtomicBoolean();
+        
+        when(executorService.isTerminated()).thenAnswer(invocation -> terminated.get());
+      
+        when(executorService.awaitTermination(anyLong(), any())).thenAnswer(invocation  -> {
+            long timeout = invocation.getArgument(0);
+            TimeUnit unit = invocation.getArgument(1);
+          
+            try {
+                Thread.sleep(unit.toMillis(timeout));
+            } catch (InterruptedException e) {
+                awaitTerminationInterrupted.set(true);
+              
+                Thread.currentThread().interrupt();
+                throw e;
+            }
+            
+            throw new IllegalStateException(""Thread.sleep should have been interrupted"");
+        });
+        when(executorService.shutdownNow()).thenAnswer(invocation -> {
+            terminated.set(true);
+            return null;
+        });
+      
+        shutdown.shutdown(executorService);
+        CompletableFuture<Void> future = shutdown.handle();
+        future.cancel(false);
+        Awaitility.await().untilAsserted(() -> assertTrue(awaitTerminationInterrupted.get(),
+                ""awaitTermination should have been interrupted""));
+       
+        verify(executorService, times(1)).awaitTermination(anyLong(), any());
+        verify(executorService, times(1)).shutdownNow();
+    }",1
+FlakyCat,PersistentFailoverE2ETest,testSimpleConsumerEventsWithoutPartition,"public void testSimpleConsumerEventsWithoutPartition() throws Exception {
+    final String topicName = ""persistent"";
+    final String subName = ""sub1"";
+    final int numMsgs = 100;
+    TestConsumerStateEventListener listener1 = new TestConsumerStateEventListener();
+    TestConsumerStateEventListener listener2 = new TestConsumerStateEventListener();
+    ConsumerBuilder<byte[]> consumerBuilder = pulsarClient.newConsumer().topic(topicName).subscriptionName(subName).acknowledgmentGroupTime(0, TimeUnit.SECONDS).subscriptionType(Failover);
+    ConsumerBuilder<byte[]> consumerBulder1 = consumerBuilder.clone().consumerName(""1"").consumerEventListener(listener1).acknowledgmentGroupTime(0, TimeUnit.SECONDS);
+    Consumer<byte[]> consumer1 = consumerBulder1.subscribe();
+    Consumer<byte[]> consumer2 = consumerBuilder.clone().consumerName(""2"").consumerEventListener(listener2).subscribe();
+    verifyConsumerActive(listener1, -1);
+    verifyConsumerInactive(listener2, -1);
+    PersistentTopic topicRef = ((PersistentTopic) (pulsar.getBrokerService().getTopicReference(topicName).get()));
+    PersistentSubscription subRef = topicRef.getSubscription(subName);
+    assertNotNull(topicRef);
+    assertNotNull(subRef);
+    assertTrue(subRef.getDispatcher().isConsumerConnected());
+    assertEquals(subRef.getDispatcher().getType(), Failover);
+    List<CompletableFuture<MessageId>> futures = Lists.newArrayListWithCapacity(numMsgs);
+    Producer<byte[]> producer = pulsarClient.newProducer().topic(topicName).enableBatching(false).messageRoutingMode(SinglePartition).create();
+    for (int i = 0; i < numMsgs; i++) {
+        String message = ""my-message-"" + i;
+        futures.add(producer.sendAsync(message.getBytes()));
+    }
+    FutureUtil.waitForAll(futures).get();
+    futures.clear();
+    rolloverPerIntervalStats();
+    assertEquals(subRef.getNumberOfEntriesInBacklog(), numMsgs);
+    Thread.sleep(ASYNC_EVENT_COMPLETION_WAIT);
+    Message<byte[]> msg = null;
+    Assert.assertNull(consumer2.receive(1, TimeUnit.SECONDS));
+    for (int i = 0; i < numMsgs; i++) {
+        msg = consumer1.receive(1, TimeUnit.SECONDS);
+        Assert.assertNotNull(msg);
+        Assert.assertEquals(new String(msg.getData()), ""my-message-"" + i);
+        consumer1.acknowledge(msg);
+    }
+    rolloverPerIntervalStats();
+    Thread.sleep(ASYNC_EVENT_COMPLETION_WAIT);
+    assertEquals(subRef.getNumberOfEntriesInBacklog(), 0);
+    for (int i = 0; i < numMsgs; i++) {
+        String message = ""my-message-"" + i;
+        futures.add(producer.sendAsync(message.getBytes()));
+    }
+    FutureUtil.waitForAll(futures).get();
+    futures.clear();
+    for (int i = 0; i < 5; i++) {
+        msg = consumer1.receive(1, TimeUnit.SECONDS);
+        Assert.assertNotNull(msg);
+        Assert.assertEquals(new String(msg.getData()), ""my-message-"" + i);
+        consumer1.acknowledge(msg);
+    }
+    for (int i = 5; i < 10; i++) {
+        msg = consumer1.receive(1, TimeUnit.SECONDS);
+        Assert.assertNotNull(msg);
+        Assert.assertEquals(new String(msg.getData()), ""my-message-"" + i);
+    }
+    consumer1.close();
+    Thread.sleep(CONSUMER_ADD_OR_REMOVE_WAIT_TIME);
+    verifyConsumerActive(listener2, -1);
+    verifyConsumerNotReceiveAnyStateChanges(listener1);
+    for (int i = 5; i < numMsgs; i++) {
+        msg = consumer2.receive(1, TimeUnit.SECONDS);
+        Assert.assertNotNull(msg);
+        Assert.assertEquals(new String(msg.getData()), ""my-message-"" + i);
+        consumer2.acknowledge(msg);
+    }
+    Assert.assertNull(consumer2.receive(1, TimeUnit.SECONDS));
+    rolloverPerIntervalStats();
+    Thread.sleep(ASYNC_EVENT_COMPLETION_WAIT);
+    assertEquals(subRef.getNumberOfEntriesInBacklog(), 0);
+    for (int i = 0; i < numMsgs; i++) {
+        String message = ""my-message-"" + i;
+        futures.add(producer.sendAsync(message.getBytes()));
+    }
+    FutureUtil.waitForAll(futures).get();
+    futures.clear();
+    for (int i = 0; i < 5; i++) {
+        msg = consumer2.receive(1, TimeUnit.SECONDS);
+        Assert.assertNotNull(msg);
+        Assert.assertEquals(new String(msg.getData()), ""my-message-"" + i);
+        consumer2.acknowledge(msg);
+    }
+    consumer1 = consumerBulder1.subscribe();
+    Thread.sleep(CONSUMER_ADD_OR_REMOVE_WAIT_TIME);
+    for (int i = 5; i < numMsgs; i++) {
+        msg = consumer1.receive(1, TimeUnit.SECONDS);
+        Assert.assertNotNull(msg);
+        Assert.assertEquals(new String(msg.getData()), ""my-message-"" + i);
+        consumer1.acknowledge(msg);
+    }
+    Assert.assertNull(consumer1.receive(1, TimeUnit.SECONDS));
+    rolloverPerIntervalStats();
+    Thread.sleep(ASYNC_EVENT_COMPLETION_WAIT);
+    assertEquals(subRef.getNumberOfEntriesInBacklog(), 0);
+    for (int i = 0; i < numMsgs; i++) {
+        String message = ""my-message-"" + i;
+        futures.add(producer.sendAsync(message.getBytes()));
+    }
+    FutureUtil.waitForAll(futures).get();
+    futures.clear();
+    for (int i = 0; i < 5; i++) {
+        msg = consumer1.receive(1, TimeUnit.SECONDS);
+        Assert.assertNotNull(msg);
+        Assert.assertEquals(new String(msg.getData()), ""my-message-"" + i);
+        consumer1.acknowledge(msg);
+    }
+    TestConsumerStateEventListener listener3 = new TestConsumerStateEventListener();
+    Consumer<byte[]> consumer3 = consumerBuilder.clone().consumerName(""3"").consumerEventListener(listener3).subscribe();
+    Thread.sleep(CONSUMER_ADD_OR_REMOVE_WAIT_TIME);
+    verifyConsumerInactive(listener3, -1);
+    Assert.assertNull(consumer3.receive(1, TimeUnit.SECONDS));
+    for (int i = 5; i < numMsgs; i++) {
+        msg = consumer1.receive(1, TimeUnit.SECONDS);
+        Assert.assertNotNull(msg);
+        Assert.assertEquals(new String(msg.getData()), ""my-message-"" + i);
+        consumer1.acknowledge(msg);
+    }
+    rolloverPerIntervalStats();
+    Thread.sleep(ASYNC_EVENT_COMPLETION_WAIT);
+    assertEquals(subRef.getNumberOfEntriesInBacklog(), 0);
+    try {
+        consumer1.unsubscribe();
+        fail(""should fail"");
+    } catch (PulsarClientException e) {
+    }
+    consumer1.close();
+    Thread.sleep(CONSUMER_ADD_OR_REMOVE_WAIT_TIME);
+    consumer2.close();
+    Thread.sleep(CONSUMER_ADD_OR_REMOVE_WAIT_TIME);
+    try {
+        consumer3.unsubscribe();
+    } catch (PulsarClientException e) {
+        fail(""Should not fail"", e);
+    }
+    Thread.sleep(ASYNC_EVENT_COMPLETION_WAIT);
+    subRef = topicRef.getSubscription(subName);
+    assertNull(subRef);
+    producer.close();
+    consumer3.close();
+    admin.topics().delete(topicName);
+}",1
+FlakyCat,Unknown,invalidationInAnotherInstance_closed,"
+    public void invalidationInAnotherInstance_closed() throws Exception {
+        final SampleDatabase db1 = openDatabase(true);
+        final SampleDatabase db2 = openDatabase(true);
+        final SampleDatabase db3 = openDatabase(true);
+        final CountDownLatch invalidated1 = prepareTableObserver(db1);
+        final Pair<CountDownLatch, CountDownLatch> changed1 = prepareLiveDataObserver(db1);
+        final CountDownLatch invalidated2 = prepareTableObserver(db2);
+        final Pair<CountDownLatch, CountDownLatch> changed2 = prepareLiveDataObserver(db2);
+        final CountDownLatch invalidated3 = prepareTableObserver(db3);
+        final Pair<CountDownLatch, CountDownLatch> changed3 = prepareLiveDataObserver(db3);
+        db2.getCustomerDao().insert(CUSTOMER_1);
+        assertTrue(invalidated1.await(3, TimeUnit.SECONDS));
+        assertTrue(changed1.first.await(3, TimeUnit.SECONDS));
+        assertTrue(invalidated2.await(3, TimeUnit.SECONDS));
+        assertTrue(changed2.first.await(3, TimeUnit.SECONDS));
+        assertTrue(invalidated3.await(3, TimeUnit.SECONDS));
+        assertTrue(changed3.first.await(3, TimeUnit.SECONDS));
+        db3.close();
+        db2.getCustomerDao().insert(CUSTOMER_2);
+
+        assertTrue(changed1.second.await(3, TimeUnit.SECONDS));
+        assertTrue(changed2.second.await(3, TimeUnit.SECONDS));
+        assertFalse(changed3.second.await(300, TimeUnit.MILLISECONDS));
+    
+    }",1
+FlakyCat,HtmlAccelServletTest,testHtmlAccelRewriteChainParams,"public void testHtmlAccelRewriteChainParams() throws Exception {
+    String url = ""http://example.org/data.html?id=1"";
+    String data = ""<html><body>Hello World</body></html>"";
+    HttpResponse resp = new HttpResponseBuilder().setResponse(data.getBytes()).setHeader(""Content-Type"", ""text/html"").setHttpStatusCode(200).create();
+    Capture<HttpRequest> reqCapture = new Capture<HttpRequest>();
+    expect(pipeline.execute(capture(reqCapture))).andReturn(resp).once();
+    expectRequest(""/container=open&refresh=3600/"" + url, null);
+    expect(renderer.render(isA(GadgetContext.class))).andReturn(RenderingResults.ok(REWRITE_CONTENT));
+    replay();
+    servlet.doGet(request, recorder);
+    verify();
+    HttpRequest req = reqCapture.getValue();
+    assertEquals(url, req.getUri().toString());
+    assertEquals(""open"", req.getContainer());
+    assertEquals(REWRITE_CONTENT, recorder.getResponseAsString());
+    assertEquals(200, recorder.getHttpStatusCode());
+    assertEquals(""private,max-age=3600"", recorder.getHeader(""Cache-Control""));
+}",1
+FlakyCat,MetricsQueryTestRun,testingUserServiceGaugeMetrics,"
+  public void testingUserServiceGaugeMetrics() throws Exception {
+    MetricsCollector collector =
+      collectionService.getCollector(getUserServiceContext(Constants.DEFAULT_NAMESPACE, ""WordCount"", ""CounterService"",
+                                                           ""CountRunnable""));
+    collector.increment(""gmetric"", 1);
+    collector.gauge(""gmetric"", 10);
+    collector.increment(""gmetric"", 1);
+    TimeUnit.SECONDS.sleep(1);
+    collector.gauge(""gmetric"", 10);
+    TimeUnit.SECONDS.sleep(2);
+    String runnableRequest =
+      ""/system/apps/WordCount/services/CounterService/runnables/CountRunnable/gmetric?aggregate=true"";
+    String serviceRequest =
+      ""/system/apps/WordCount/services/CounterService/gmetric?aggregate=true"";
+    testSingleMetric(runnableRequest, 10);
+    testSingleMetric(serviceRequest, 10);
+  }",1
