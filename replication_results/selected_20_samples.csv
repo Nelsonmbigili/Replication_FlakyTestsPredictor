@@ -1,0 +1,472 @@
+project,class_name,test_name,flaky,full_code,preprocessed_code,NoOfTokens for orignal code,tokens of reduced code,final_code
+achilles,RegularStatementWrapperTest,should_trace_query,1.0,"@Test public void should_trace_query() throws Exception {
+  wrapper=new RegularStatementWrapper(Entity1.class,rs,new Object[]{1},ONE,NO_LISTENER,NO_SERIAL_CONSISTENCY);
+  ExecutionInfo executionInfo=mock(ExecutionInfo.class,RETURNS_DEEP_STUBS);
+  QueryTrace.Event event=mock(QueryTrace.Event.class);
+  when(resultSet.getAllExecutionInfo()).thenReturn(Arrays.asList(executionInfo));
+  when(executionInfo.getAchievedConsistencyLevel()).thenReturn(ConsistencyLevel.ALL);
+  when(executionInfo.getQueryTrace().getEvents()).thenReturn(Arrays.asList(event));
+  when(event.getDescription()).thenReturn(""description"");
+  when(event.getSource()).thenReturn(InetAddress.getLocalHost());
+  when(event.getSourceElapsedMicros()).thenReturn(100);
+  when(event.getThreadName()).thenReturn(""thread"");
+  wrapper.tracing(resultSet);
+}
+","@Test public void should_trace_query() throws Exception {
+}",268.0,15.0,"@Test public void should_trace_query() throws Exception {
+  wrapper=new RegularStatementWrapper(Entity1.class,rs,new Object[]{1},ONE,NO_LISTENER,NO_SERIAL_CONSISTENCY);
+  ExecutionInfo executionInfo=mock(ExecutionInfo.class,RETURNS_DEEP_STUBS);
+  QueryTrace.Event event=mock(QueryTrace.Event.class);
+  when(resultSet.getAllExecutionInfo()).thenReturn(Arrays.asList(executionInfo));
+  when(executionInfo.getAchievedConsistencyLevel()).thenReturn(ConsistencyLevel.ALL);
+  when(executionInfo.getQueryTrace().getEvents()).thenReturn(Arrays.asList(event));
+  when(event.getDescription()).thenReturn(""description"");
+  when(event.getSource()).thenReturn(InetAddress.getLocalHost());
+  when(event.getSourceElapsedMicros()).thenReturn(100);
+  when(event.getThreadName()).thenReturn(""thread"");
+  wrapper.tracing(resultSet);
+}
+"
+achilles,ClusteredEntityIT,should_persist_with_ttl,1.0,"@Test public void should_persist_with_ttl() throws Exception {
+  compoundKey=new ClusteredKey(RandomUtils.nextLong(),RandomUtils.nextInt(),""name"");
+  entity=new ClusteredEntity(compoundKey,""clustered_value"");
+  manager.persist(entity,OptionsBuilder.withTtl(1));
+  assertThat(manager.find(ClusteredEntity.class,compoundKey)).isNotNull();
+  Thread.sleep(1000);
+  assertThat(manager.find(ClusteredEntity.class,compoundKey)).isNull();
+}
+","@Test public void should_persist_with_ttl() throws Exception {
+assertThat(manager.find(ClusteredEntity.class,compoundKey)).isNotNull();
+}",141.0,43.0,"@Test public void should_persist_with_ttl() throws Exception {
+  compoundKey=new ClusteredKey(RandomUtils.nextLong(),RandomUtils.nextInt(),""name"");
+  entity=new ClusteredEntity(compoundKey,""clustered_value"");
+  manager.persist(entity,OptionsBuilder.withTtl(1));
+  assertThat(manager.find(ClusteredEntity.class,compoundKey)).isNotNull();
+  Thread.sleep(1000);
+  assertThat(manager.find(ClusteredEntity.class,compoundKey)).isNull();
+}
+"
+achilles,ClusteredEntityIT,should_update_with_ttl,1.0,"@Test public void should_update_with_ttl() throws Exception {
+  compoundKey=new ClusteredKey(RandomUtils.nextLong(),RandomUtils.nextInt(),""name"");
+  entity=new ClusteredEntity(compoundKey,""clustered_value"");
+  entity=manager.persist(entity,OptionsBuilder.withTtl(1));
+  assertThat(manager.find(ClusteredEntity.class,compoundKey)).isNotNull();
+  Thread.sleep(1000);
+  assertThat(manager.find(ClusteredEntity.class,compoundKey)).isNull();
+}
+","@Test public void should_update_with_ttl() throws Exception {
+assertThat(manager.find(ClusteredEntity.class,compoundKey)).isNotNull();
+}",142.0,42.0,"@Test public void should_update_with_ttl() throws Exception {
+  compoundKey=new ClusteredKey(RandomUtils.nextLong(),RandomUtils.nextInt(),""name"");
+  entity=new ClusteredEntity(compoundKey,""clustered_value"");
+  entity=manager.persist(entity,OptionsBuilder.withTtl(1));
+  assertThat(manager.find(ClusteredEntity.class,compoundKey)).isNotNull();
+  Thread.sleep(1000);
+  assertThat(manager.find(ClusteredEntity.class,compoundKey)).isNull();
+}
+"
+achilles,SecondaryIndexIT,should_return_entities_for_indexed_query,1.0,"@Test public void should_return_entities_for_indexed_query() throws Exception {
+  CompleteBean entity1=CompleteBeanTestBuilder.builder().randomId().name(""DuyHai"").buid();
+  CompleteBean entity2=CompleteBeanTestBuilder.builder().randomId().name(""John DOO"").buid();
+  manager.persist(entity1);
+  manager.persist(entity2);
+  IndexCondition condition=new IndexCondition(""name"",""John DOO"");
+  List<CompleteBean> actual=manager.indexedQuery(CompleteBean.class,condition).get();
+  assertThat(actual).hasSize(1);
+  CompleteBean found1=actual.get(0);
+  assertThat(found1).isNotNull();
+}
+","@Test public void should_return_entities_for_indexed_query() throws Exception {
+assertThat(actual).hasSize(1);
+}",181.0,35.0,"@Test public void should_return_entities_for_indexed_query() throws Exception {
+  CompleteBean entity1=CompleteBeanTestBuilder.builder().randomId().name(""DuyHai"").buid();
+  CompleteBean entity2=CompleteBeanTestBuilder.builder().randomId().name(""John DOO"").buid();
+  manager.persist(entity1);
+  manager.persist(entity2);
+  IndexCondition condition=new IndexCondition(""name"",""John DOO"");
+  List<CompleteBean> actual=manager.indexedQuery(CompleteBean.class,condition).get();
+  assertThat(actual).hasSize(1);
+  CompleteBean found1=actual.get(0);
+  assertThat(found1).isNotNull();
+}
+"
+activiti,ActivityEventsTest,testActivityTimeOutEvent,1.0,"@Deployment(resources=""org/activiti/engine/test/api/event/JobEventsTest.testJobEntityEvents.bpmn20.xml"") public void testActivityTimeOutEvent(){
+  ProcessInstance processInstance=runtimeService.startProcessInstanceByKey(""testJobEvents"");
+  Job theJob=managementService.createTimerJobQuery().processInstanceId(processInstance.getId()).singleResult();
+  assertNotNull(theJob);
+  Calendar tomorrow=Calendar.getInstance();
+  tomorrow.add(Calendar.DAY_OF_YEAR,1);
+  processEngineConfiguration.getClock().setCurrentTime(tomorrow.getTime());
+  waitForJobExecutorToProcessAllJobs(2000,1000);
+  assertEquals(1,listener.getEventsReceived().size());
+  ActivitiEvent activitiEvent=listener.getEventsReceived().get(0);
+  assertEquals(""ACTIVITY_CANCELLED event expected"",ActivitiEventType.ACTIVITY_CANCELLED,activitiEvent.getType());
+  ActivitiActivityCancelledEvent cancelledEvent=(ActivitiActivityCancelledEvent)activitiEvent;
+  assertTrue(""TIMER is the cause of the cancellation"",cancelledEvent.getCause() instanceof JobEntity);
+}
+","@Deployment(resources=""org/activiti/engine/test/api/event/JobEventsTest.testJobEntityEvents.bpmn20.xml"") public void testActivityTimeOutEvent(){
+assertNotNull(theJob);
+}",297.0,54.0,"@Deployment(resources=""org/activiti/engine/test/api/event/JobEventsTest.testJobEntityEvents.bpmn20.xml"") public void testActivityTimeOutEvent(){
+  ProcessInstance processInstance=runtimeService.startProcessInstanceByKey(""testJobEvents"");
+  Job theJob=managementService.createTimerJobQuery().processInstanceId(processInstance.getId()).singleResult();
+  assertNotNull(theJob);
+  Calendar tomorrow=Calendar.getInstance();
+  tomorrow.add(Calendar.DAY_OF_YEAR,1);
+  processEngineConfiguration.getClock().setCurrentTime(tomorrow.getTime());
+  waitForJobExecutorToProcessAllJobs(2000,1000);
+  assertEquals(1,listener.getEventsReceived().size());
+  ActivitiEvent activitiEvent=listener.getEventsReceived().get(0);
+  assertEquals(""ACTIVITY_CANCELLED event expected"",ActivitiEventType.ACTIVITY_CANCELLED,activitiEvent.getType());
+  ActivitiActivityCancelledEvent cancelledEvent=(ActivitiActivityCancelledEvent)activitiEvent;
+  assertTrue(""TIMER is the cause of the cancellation"",cancelledEvent.getCause() instanceof JobEntity);
+}
+"
+activiti,JobEventsTest,testTimerFiredForIntermediateTimer,1.0,"/** 
+ * Test TIMER_FIRED event for intermediate timer bpmn event.
+ */
+@Deployment public void testTimerFiredForIntermediateTimer() throws Exception {
+  runtimeService.startProcessInstanceByKey(""testTimerFiredForIntermediateTimer"");
+  Calendar tomorrow=Calendar.getInstance();
+  tomorrow.add(Calendar.DAY_OF_YEAR,1);
+  processEngineConfiguration.getClock().setCurrentTime(tomorrow.getTime());
+  waitForJobExecutorToProcessAllJobs(2000,100);
+  checkEventCount(1,ActivitiEventType.TIMER_SCHEDULED);
+  checkEventCount(0,ActivitiEventType.JOB_CANCELED);
+  checkEventCount(1,ActivitiEventType.TIMER_FIRED);
+}
+","/** 
+ * Test TIMER_FIRED event for intermediate timer bpmn event.
+ */
+@Deployment public void testTimerFiredForIntermediateTimer() throws Exception {
+}",191.0,41.0,"/** 
+ * Test TIMER_FIRED event for intermediate timer bpmn event.
+ */
+@Deployment public void testTimerFiredForIntermediateTimer() throws Exception {
+  runtimeService.startProcessInstanceByKey(""testTimerFiredForIntermediateTimer"");
+  Calendar tomorrow=Calendar.getInstance();
+  tomorrow.add(Calendar.DAY_OF_YEAR,1);
+  processEngineConfiguration.getClock().setCurrentTime(tomorrow.getTime());
+  waitForJobExecutorToProcessAllJobs(2000,100);
+  checkEventCount(1,ActivitiEventType.TIMER_SCHEDULED);
+  checkEventCount(0,ActivitiEventType.JOB_CANCELED);
+  checkEventCount(1,ActivitiEventType.TIMER_FIRED);
+}
+"
+activiti,ProcessDefinitionSuspensionTest,testSuspendProcessInstancesDuringProcessDefinitionSuspend,1.0,"@Deployment(resources={""org/activiti/engine/test/api/runtime/oneTaskProcess.bpmn20.xml""}) public void testSuspendProcessInstancesDuringProcessDefinitionSuspend(){
+  int nrOfProcessInstances=9;
+  ProcessDefinition processDefinition=repositoryService.createProcessDefinitionQuery().singleResult();
+  for (int i=0; i < nrOfProcessInstances; i++) {
+    runtimeService.startProcessInstanceByKey(processDefinition.getKey());
+  }
+  assertEquals(nrOfProcessInstances,runtimeService.createProcessInstanceQuery().count());
+  assertEquals(0,runtimeService.createProcessInstanceQuery().suspended().count());
+  assertEquals(nrOfProcessInstances,runtimeService.createProcessInstanceQuery().active().count());
+  repositoryService.suspendProcessDefinitionById(processDefinition.getId(),true,null);
+  for (  ProcessInstance processInstance : runtimeService.createProcessInstanceQuery().list()) {
+    assertTrue(processInstance.isSuspended());
+  }
+  for (  Task task : taskService.createTaskQuery().list()) {
+    try {
+      taskService.complete(task.getId());
+      fail(""A suspended task shouldn't be able to be continued"");
+    }
+ catch (    ActivitiException e) {
+    }
+  }
+  assertEquals(nrOfProcessInstances,runtimeService.createProcessInstanceQuery().count());
+  assertEquals(nrOfProcessInstances,runtimeService.createProcessInstanceQuery().suspended().count());
+  assertEquals(0,runtimeService.createProcessInstanceQuery().active().count());
+  repositoryService.activateProcessDefinitionById(processDefinition.getId(),true,null);
+  for (  Task task : taskService.createTaskQuery().list()) {
+    taskService.complete(task.getId());
+  }
+  assertEquals(0,runtimeService.createProcessInstanceQuery().count());
+  assertEquals(0,runtimeService.createProcessInstanceQuery().suspended().count());
+  assertEquals(0,runtimeService.createProcessInstanceQuery().active().count());
+}
+","@Deployment(resources={""org/activiti/engine/test/api/runtime/oneTaskProcess.bpmn20.xml""}) public void testSuspendProcessInstancesDuringProcessDefinitionSuspend(){
+assertEquals(nrOfProcessInstances,runtimeService.createProcessInstanceQuery().count());
+}",518.0,72.0,"@Deployment(resources={""org/activiti/engine/test/api/runtime/oneTaskProcess.bpmn20.xml""}) public void testSuspendProcessInstancesDuringProcessDefinitionSuspend(){
+assertEquals(nrOfProcessInstances,runtimeService.createProcessInstanceQuery().count());
+}"
+activiti,ProcessDefinitionSuspensionTest,testDelayedActivateProcessDefinition,1.0,"@Deployment(resources={""org/activiti/engine/test/api/runtime/oneTaskProcess.bpmn20.xml""}) public void testDelayedActivateProcessDefinition(){
+  Date startTime=new Date();
+  processEngineConfiguration.getClock().setCurrentTime(startTime);
+  ProcessDefinition processDefinition=repositoryService.createProcessDefinitionQuery().singleResult();
+  repositoryService.suspendProcessDefinitionById(processDefinition.getId());
+  try {
+    runtimeService.startProcessInstanceById(processDefinition.getId());
+    fail();
+  }
+ catch (  ActivitiException e) {
+    assertTextPresentIgnoreCase(""suspended"",e.getMessage());
+  }
+  assertEquals(0,runtimeService.createProcessInstanceQuery().count());
+  assertEquals(0,repositoryService.createProcessDefinitionQuery().active().count());
+  assertEquals(1,repositoryService.createProcessDefinitionQuery().suspended().count());
+  long oneDayFromStart=startTime.getTime() + (24 * 60 * 60* 1000);
+  repositoryService.activateProcessDefinitionById(processDefinition.getId(),false,new Date(oneDayFromStart));
+  long twoDaysFromStart=startTime.getTime() + (2 * 24 * 60* 60* 1000);
+  processEngineConfiguration.getClock().setCurrentTime(new Date(twoDaysFromStart));
+  waitForJobExecutorToProcessAllJobs(5000L,50L);
+  runtimeService.startProcessInstanceById(processDefinition.getId());
+  assertEquals(1,runtimeService.createProcessInstanceQuery().count());
+  assertEquals(1,repositoryService.createProcessDefinitionQuery().active().count());
+  assertEquals(0,repositoryService.createProcessDefinitionQuery().suspended().count());
+}
+","@Deployment(resources={""org/activiti/engine/test/api/runtime/oneTaskProcess.bpmn20.xml""}) public void testDelayedActivateProcessDefinition(){
+fail();
+}",428.0,48.0,"@Deployment(resources={""org/activiti/engine/test/api/runtime/oneTaskProcess.bpmn20.xml""}) public void testDelayedActivateProcessDefinition(){
+  Date startTime=new Date();
+  processEngineConfiguration.getClock().setCurrentTime(startTime);
+  ProcessDefinition processDefinition=repositoryService.createProcessDefinitionQuery().singleResult();
+  repositoryService.suspendProcessDefinitionById(processDefinition.getId());
+  try {
+    runtimeService.startProcessInstanceById(processDefinition.getId());
+    fail();
+  }
+ catch (  ActivitiException e) {
+    assertTextPresentIgnoreCase(""suspended"",e.getMessage());
+  }
+  assertEquals(0,runtimeService.createProcessInstanceQuery().count());
+  assertEquals(0,repositoryService.createProcessDefinitionQuery().active().count());
+  assertEquals(1,repositoryService.createProcessDefinitionQuery().suspended().count());
+  long oneDayFromStart=startTime.getTime() + (24 * 60 * 60* 1000);
+  repositoryService.activateProcessDefinitionById(processDefinition.getId(),false,new Date(oneDayFromStart));
+  long twoDaysFromStart=startTime.getTime() + (2 * 24 * 60* 60* 1000);
+  processEngineConfiguration.getClock().setCurrentTime(new Date(twoDaysFromStart));
+  waitForJobExecutorToProcessAllJobs(5000L,50L);
+  runtimeService.startProcessInstanceById(processDefinition.getId());
+  assertEquals(1,runtimeService.createProcessInstanceQuery().count());
+  assertEquals(1,repositoryService.createProcessDefinitionQuery().active().count());
+  assertEquals(0,repositoryService.createProcessDefinitionQuery().suspended().count());
+}
+"
+activiti,ProcessDefinitionSuspensionTest,testDelayedSuspendMultipleProcessDefinitionsByKey,1.0,"public void testDelayedSuspendMultipleProcessDefinitionsByKey(){
+  Date startTime=new Date();
+  processEngineConfiguration.getClock().setCurrentTime(startTime);
+  final long hourInMs=60 * 60 * 1000;
+  int nrOfProcessDefinitions=5;
+  for (int i=0; i < nrOfProcessDefinitions; i++) {
+    repositoryService.createDeployment().addClasspathResource(""org/activiti/engine/test/api/runtime/oneTaskProcess.bpmn20.xml"").deploy();
+  }
+  assertEquals(nrOfProcessDefinitions,repositoryService.createProcessDefinitionQuery().count());
+  assertEquals(nrOfProcessDefinitions,repositoryService.createProcessDefinitionQuery().active().count());
+  assertEquals(0,repositoryService.createProcessDefinitionQuery().suspended().count());
+  runtimeService.startProcessInstanceByKey(""oneTaskProcess"");
+  repositoryService.suspendProcessDefinitionByKey(""oneTaskProcess"",true,new Date(startTime.getTime() + (2 * hourInMs)));
+  assertEquals(nrOfProcessDefinitions,repositoryService.createProcessDefinitionQuery().count());
+  assertEquals(nrOfProcessDefinitions,repositoryService.createProcessDefinitionQuery().active().count());
+  assertEquals(0,repositoryService.createProcessDefinitionQuery().suspended().count());
+  assertEquals(1,runtimeService.createProcessInstanceQuery().active().count());
+  assertEquals(nrOfProcessDefinitions,managementService.createTimerJobQuery().count());
+  for (  ProcessDefinition processDefinition : repositoryService.createProcessDefinitionQuery().list()) {
+    assertEquals(1,managementService.createTimerJobQuery().processDefinitionId(processDefinition.getId()).count());
+  }
+  processEngineConfiguration.getClock().setCurrentTime(new Date(startTime.getTime() + (3 * hourInMs)));
+  waitForJobExecutorToProcessAllJobsAndExecutableTimerJobs(30000L,100L);
+  assertEquals(nrOfProcessDefinitions,repositoryService.createProcessDefinitionQuery().count());
+  assertEquals(0,repositoryService.createProcessDefinitionQuery().active().count());
+  assertEquals(nrOfProcessDefinitions,repositoryService.createProcessDefinitionQuery().suspended().count());
+  assertEquals(1,runtimeService.createProcessInstanceQuery().suspended().count());
+  repositoryService.activateProcessDefinitionByKey(""oneTaskProcess"",true,new Date(startTime.getTime() + (5 * hourInMs)));
+  assertEquals(nrOfProcessDefinitions,repositoryService.createProcessDefinitionQuery().count());
+  assertEquals(0,repositoryService.createProcessDefinitionQuery().active().count());
+  assertEquals(nrOfProcessDefinitions,repositoryService.createProcessDefinitionQuery().suspended().count());
+  assertEquals(1,runtimeService.createProcessInstanceQuery().suspended().count());
+  processEngineConfiguration.getClock().setCurrentTime(new Date(startTime.getTime() + (6 * hourInMs)));
+  waitForJobExecutorToProcessAllJobsAndExecutableTimerJobs(60000L,100L);
+  assertEquals(nrOfProcessDefinitions,repositoryService.createProcessDefinitionQuery().count());
+  assertEquals(nrOfProcessDefinitions,repositoryService.createProcessDefinitionQuery().active().count());
+  assertEquals(0,repositoryService.createProcessDefinitionQuery().suspended().count());
+  assertEquals(1,runtimeService.createProcessInstanceQuery().active().count());
+  for (  org.activiti.engine.repository.Deployment deployment : repositoryService.createDeploymentQuery().list()) {
+    repositoryService.deleteDeployment(deployment.getId(),true);
+  }
+}
+","public void testDelayedSuspendMultipleProcessDefinitionsByKey(){
+assertEquals(nrOfProcessDefinitions,repositoryService.createProcessDefinitionQuery().count());
+}",914.0,41.0,"public void testDelayedSuspendMultipleProcessDefinitionsByKey(){
+assertEquals(nrOfProcessDefinitions,repositoryService.createProcessDefinitionQuery().count());
+}"
+activiti,TaskServiceTest,testGetVariableByHistoricActivityInstance,1.0,"@Deployment(resources={""org/activiti/engine/test/api/oneTaskProcess.bpmn20.xml""}) public void testGetVariableByHistoricActivityInstance(){
+  if (processEngineConfiguration.getHistoryLevel().isAtLeast(HistoryLevel.FULL)) {
+    ProcessInstance processInstance=runtimeService.startProcessInstanceByKey(""oneTaskProcess"");
+    assertNotNull(processInstance);
+    Task task=taskService.createTaskQuery().singleResult();
+    taskService.setVariable(task.getId(),""variable1"",""value1"");
+    taskService.setVariable(task.getId(),""variable1"",""value2"");
+    HistoricActivityInstance historicActivitiInstance=historyService.createHistoricActivityInstanceQuery().processInstanceId(processInstance.getId()).activityId(""theTask"").singleResult();
+    assertNotNull(historicActivitiInstance);
+    List<HistoricDetail> resultSet=historyService.createHistoricDetailQuery().variableUpdates().activityInstanceId(historicActivitiInstance.getId()).orderByTime().asc().list();
+    assertEquals(2,resultSet.size());
+    assertEquals(""variable1"",((HistoricVariableUpdate)resultSet.get(0)).getVariableName());
+    assertEquals(""value1"",((HistoricVariableUpdate)resultSet.get(0)).getValue());
+    assertEquals(""variable1"",((HistoricVariableUpdate)resultSet.get(1)).getVariableName());
+    assertEquals(""value2"",((HistoricVariableUpdate)resultSet.get(1)).getValue());
+  }
+}
+","@Deployment(resources={""org/activiti/engine/test/api/oneTaskProcess.bpmn20.xml""}) public void testGetVariableByHistoricActivityInstance(){
+if (processEngineConfiguration.getHistoryLevel().isAtLeast(HistoryLevel.FULL)) {
+}",394.0,67.0,"@Deployment(resources={""org/activiti/engine/test/api/oneTaskProcess.bpmn20.xml""}) public void testGetVariableByHistoricActivityInstance(){
+  if (processEngineConfiguration.getHistoryLevel().isAtLeast(HistoryLevel.FULL)) {
+    ProcessInstance processInstance=runtimeService.startProcessInstanceByKey(""oneTaskProcess"");
+    assertNotNull(processInstance);
+    Task task=taskService.createTaskQuery().singleResult();
+    taskService.setVariable(task.getId(),""variable1"",""value1"");
+    taskService.setVariable(task.getId(),""variable1"",""value2"");
+    HistoricActivityInstance historicActivitiInstance=historyService.createHistoricActivityInstanceQuery().processInstanceId(processInstance.getId()).activityId(""theTask"").singleResult();
+    assertNotNull(historicActivitiInstance);
+    List<HistoricDetail> resultSet=historyService.createHistoricDetailQuery().variableUpdates().activityInstanceId(historicActivitiInstance.getId()).orderByTime().asc().list();
+    assertEquals(2,resultSet.size());
+    assertEquals(""variable1"",((HistoricVariableUpdate)resultSet.get(0)).getVariableName());
+    assertEquals(""value1"",((HistoricVariableUpdate)resultSet.get(0)).getValue());
+    assertEquals(""variable1"",((HistoricVariableUpdate)resultSet.get(1)).getVariableName());
+    assertEquals(""value2"",((HistoricVariableUpdate)resultSet.get(1)).getValue());
+  }
+}
+"
+achilles,ArgumentExtractorTest,should_init_entity_packages,0.0,"@Test public void should_init_entity_packages() throws Exception {
+  configMap.put(ENTITY_PACKAGES,""info.archinnov.achilles.test.sample.entity,info.archinnov.achilles.test.more.entity"");
+  Collection<Class<?>> actual=extractor.initEntities(configMap,this.getClass().getClassLoader());
+  assertThat(actual).containsOnly(Entity1.class,Entity2.class,Entity3.class);
+}
+","@Test public void should_init_entity_packages() throws Exception {
+assertThat(actual).containsOnly(Entity1.class,Entity2.class,Entity3.class);
+}",116.0,43.0,"@Test public void should_init_entity_packages() throws Exception {
+  configMap.put(ENTITY_PACKAGES,""info.archinnov.achilles.test.sample.entity,info.archinnov.achilles.test.more.entity"");
+  Collection<Class<?>> actual=extractor.initEntities(configMap,this.getClass().getClassLoader());
+  assertThat(actual).containsOnly(Entity1.class,Entity2.class,Entity3.class);
+}
+"
+achilles,ArgumentExtractorTest,should_init_empty_entity_packages,0.0,"@Test public void should_init_empty_entity_packages() throws Exception {
+  Collection<Class<?>> actual=extractor.initEntities(configMap,this.getClass().getClassLoader());
+  assertThat(actual).isEmpty();
+}
+","@Test public void should_init_empty_entity_packages() throws Exception {
+assertThat(actual).isEmpty();
+}",58.0,29.0,"@Test public void should_init_empty_entity_packages() throws Exception {
+  Collection<Class<?>> actual=extractor.initEntities(configMap,this.getClass().getClassLoader());
+  assertThat(actual).isEmpty();
+}
+"
+achilles,ArgumentExtractorTest,should_init_entities_list,0.0,"@Test public void should_init_entities_list(){
+  configMap.put(ENTITIES_LIST,Arrays.asList(Entity1.class));
+  Collection<Class<?>> actual=extractor.initEntities(configMap,this.getClass().getClassLoader());
+  assertThat(actual).contains(Entity1.class);
+}
+","@Test public void should_init_entities_list(){
+assertThat(actual).contains(Entity1.class);
+}",82.0,30.0,"@Test public void should_init_entities_list(){
+  configMap.put(ENTITIES_LIST,Arrays.asList(Entity1.class));
+  Collection<Class<?>> actual=extractor.initEntities(configMap,this.getClass().getClassLoader());
+  assertThat(actual).contains(Entity1.class);
+}
+"
+achilles,ArgumentExtractorTest,should_init_empty_entities_list,0.0,"@Test public void should_init_empty_entities_list(){
+  Collection<Class<?>> actual=extractor.initEntities(configMap,this.getClass().getClassLoader());
+  assertThat(actual).isEmpty();
+}
+","@Test public void should_init_empty_entities_list(){
+assertThat(actual).isEmpty();
+}",56.0,27.0,"@Test public void should_init_empty_entities_list(){
+  Collection<Class<?>> actual=extractor.initEntities(configMap,this.getClass().getClassLoader());
+  assertThat(actual).isEmpty();
+}
+"
+achilles,ArgumentExtractorTest,should_init_from_packages_and_entities_list,0.0,"@Test public void should_init_from_packages_and_entities_list(){
+  configMap.put(ENTITIES_LIST,Arrays.asList(Entity1.class));
+  configMap.put(ENTITY_PACKAGES,""info.archinnov.achilles.test.more.entity"");
+  Collection<Class<?>> actual=extractor.initEntities(configMap,this.getClass().getClassLoader());
+  assertThat(actual).containsOnly(Entity1.class,Entity3.class);
+}
+","@Test public void should_init_from_packages_and_entities_list(){
+assertThat(actual).containsOnly(Entity1.class,Entity3.class);
+}",123.0,42.0,"@Test public void should_init_from_packages_and_entities_list(){
+  configMap.put(ENTITIES_LIST,Arrays.asList(Entity1.class));
+  configMap.put(ENTITY_PACKAGES,""info.archinnov.achilles.test.more.entity"");
+  Collection<Class<?>> actual=extractor.initEntities(configMap,this.getClass().getClassLoader());
+  assertThat(actual).containsOnly(Entity1.class,Entity3.class);
+}
+"
+achilles,ArgumentExtractorTest,should_init_forceCFCreation_to_default_value,0.0,"@Test public void should_init_forceCFCreation_to_default_value() throws Exception {
+  boolean actual=extractor.initForceTableCreation(configMap);
+  assertThat(actual).isFalse();
+}
+","@Test public void should_init_forceCFCreation_to_default_value() throws Exception {
+assertThat(actual).isFalse();
+}",53.0,35.0,"@Test public void should_init_forceCFCreation_to_default_value() throws Exception {
+  boolean actual=extractor.initForceTableCreation(configMap);
+  assertThat(actual).isFalse();
+}
+"
+achilles,ArgumentExtractorTest,should_init_forceCFCreation,0.0,"@Test public void should_init_forceCFCreation() throws Exception {
+  configMap.put(FORCE_TABLE_CREATION,true);
+  boolean actual=extractor.initForceTableCreation(configMap);
+  assertThat(actual).isTrue();
+}
+","@Test public void should_init_forceCFCreation() throws Exception {
+assertThat(actual).isTrue();
+}",64.0,29.0,"@Test public void should_init_forceCFCreation() throws Exception {
+  configMap.put(FORCE_TABLE_CREATION,true);
+  boolean actual=extractor.initForceTableCreation(configMap);
+  assertThat(actual).isTrue();
+}
+"
+achilles,ArgumentExtractorTest,should_init_default_object_factory_mapper,0.0,"@Test public void should_init_default_object_factory_mapper() throws Exception {
+  ObjectMapperFactory actual=extractor.initObjectMapperFactory(configMap);
+  assertThat(actual).isNotNull();
+  ObjectMapper mapper=actual.getMapper(Integer.class);
+  assertThat(mapper).isNotNull();
+  assertThat(mapper.getSerializationConfig().getSerializationInclusion()).isEqualTo(JsonInclude.Include.NON_NULL);
+  assertThat(mapper.getDeserializationConfig().isEnabled(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)).isFalse();
+  Collection<AnnotationIntrospector> ais=mapper.getSerializationConfig().getAnnotationIntrospector().allIntrospectors();
+  assertThat(ais).hasSize(2);
+  Iterator<AnnotationIntrospector> iterator=ais.iterator();
+  assertThat(iterator.next()).isInstanceOfAny(JacksonAnnotationIntrospector.class,JaxbAnnotationIntrospector.class);
+  assertThat(iterator.next()).isInstanceOfAny(JacksonAnnotationIntrospector.class,JaxbAnnotationIntrospector.class);
+}
+","@Test public void should_init_default_object_factory_mapper() throws Exception {
+assertThat(actual).isNotNull();
+}",301.0,34.0,"@Test public void should_init_default_object_factory_mapper() throws Exception {
+  ObjectMapperFactory actual=extractor.initObjectMapperFactory(configMap);
+  assertThat(actual).isNotNull();
+  ObjectMapper mapper=actual.getMapper(Integer.class);
+  assertThat(mapper).isNotNull();
+  assertThat(mapper.getSerializationConfig().getSerializationInclusion()).isEqualTo(JsonInclude.Include.NON_NULL);
+  assertThat(mapper.getDeserializationConfig().isEnabled(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)).isFalse();
+  Collection<AnnotationIntrospector> ais=mapper.getSerializationConfig().getAnnotationIntrospector().allIntrospectors();
+  assertThat(ais).hasSize(2);
+  Iterator<AnnotationIntrospector> iterator=ais.iterator();
+  assertThat(iterator.next()).isInstanceOfAny(JacksonAnnotationIntrospector.class,JaxbAnnotationIntrospector.class);
+  assertThat(iterator.next()).isInstanceOfAny(JacksonAnnotationIntrospector.class,JaxbAnnotationIntrospector.class);
+}
+"
+achilles,ArgumentExtractorTest,should_init_object_mapper_factory_from_mapper,0.0,"@Test public void should_init_object_mapper_factory_from_mapper() throws Exception {
+  configMap.put(OBJECT_MAPPER,mapper);
+  ObjectMapperFactory actual=extractor.initObjectMapperFactory(configMap);
+  assertThat(actual).isNotNull();
+  assertThat(actual.getMapper(Long.class)).isSameAs(mapper);
+}
+","@Test public void should_init_object_mapper_factory_from_mapper() throws Exception {
+assertThat(actual).isNotNull();
+}",96.0,37.0,"@Test public void should_init_object_mapper_factory_from_mapper() throws Exception {
+  configMap.put(OBJECT_MAPPER,mapper);
+  ObjectMapperFactory actual=extractor.initObjectMapperFactory(configMap);
+  assertThat(actual).isNotNull();
+  assertThat(actual.getMapper(Long.class)).isSameAs(mapper);
+}
+"
+achilles,ArgumentExtractorTest,should_init_force_update,0.0,"@Test public void should_init_force_update() throws Exception {
+  configMap.put(ENABLE_SCHEMA_UPDATE,true);
+  boolean actual=extractor.initForceTableUpdate(configMap);
+  assertThat(actual).isTrue();
+}
+","@Test public void should_init_force_update() throws Exception {
+assertThat(actual).isTrue();
+}",62.0,27.0,"@Test public void should_init_force_update() throws Exception {
+  configMap.put(ENABLE_SCHEMA_UPDATE,true);
+  boolean actual=extractor.initForceTableUpdate(configMap);
+  assertThat(actual).isTrue();
+}
+"
