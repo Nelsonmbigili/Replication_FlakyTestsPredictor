@@ -56,8 +56,18 @@ This repository has the following structure
 - **Operating System:** Linux or macOS  
 - **Programming Labguage:** Python 
 - **Tools:** `git`, `pip`, `virtualenv` or `venv`
- 
+- **codebert-base-local** To be run locally, [download here](https://huggingface.co/microsoft/codebert-base/tree/main) the listed files below, save them in a directory *codebert-base-local* and save it the *src* folder
+```text
+    Inside src/codebert-base-local
+      ├── config.json
+      ├── merges.txt
+      ├── pytorch_model.bin
+      ├── tokenizer_config.json
+      └── vocab.json
+```
+- **Pre computed Weights** Because of storage limitations, the binary files with weights from our training are saved in [this Hugging face](https://huggingface.co/Nelsonmbigili/Replication_flakify_weights/tree/main) repository. To use our weights, download and save all files inside *replication_results* folder
 
+ 
 > All required Python packages and exact versions are specified in `requirements.txt`.
 
 ---
