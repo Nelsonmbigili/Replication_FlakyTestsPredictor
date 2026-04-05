@@ -17,7 +17,7 @@ if len(sys.argv) < 4:
 dataset_path       = sys.argv[1]
 model_weights_path = sys.argv[2]
 results_dir        = sys.argv[3]
-results_file       = os.path.join(results_dir, "FlakeFlagger_final_predictions.csv")
+results_file       = os.path.join(results_dir, "Flakify_predictions.csv")
 
 if not os.path.exists(results_dir):
     os.makedirs(results_dir)
