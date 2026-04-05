@@ -126,8 +126,9 @@ df.to_csv(results_file, index=False)
 flagged     = df[df['prediction'] == 1].shape[0]
 not_flagged = df[df['prediction'] == 0].shape[0]
 
-print(f"\n--- REPLICATION TASK 3 COMPLETE ---")
+print(f"\n----------- Summary -----------")
 print(f"Output saved to      : {results_file}")
 print(f"Total FlakyCat Tests : {len(df)}")
 print(f"Flagged as Flaky     : {flagged}")
 print(f"Flagged as Non-Flaky : {not_flagged}")
+print(f"\n--------------------------------")
