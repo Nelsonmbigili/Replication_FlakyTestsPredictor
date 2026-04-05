@@ -119,7 +119,7 @@ This repository has the following structure
 
     ###  3. **Replication Task 3:** Runing Flakify on FlakyCat Dataset
     
-    Using the script *selectRandom20.py* in the *src* directory, we randomly selected 20 tests from the Flakycat dataset. The Output saved to *replication_results/selected_20_samples.csv* in the required format.
+    Using the script *selectRandom20.py* in the *src* directory, we randomly selected 20 tests from the Flakycat dataset. The Output saved to *dataset/FlakyCat/flakycat_input.csv* in the required format.
 
     To run flakify on it, we modified the original script which included training the model into *Flakify_Predict_FlakyCat.py* which uses the weights computed in Task 2 to predict flakiness of tests in the given csv file. 
 
@@ -127,7 +127,7 @@ This repository has the following structure
     ```bash
     bash Flakify_Predict_FlakyCat.sh
     ```
-    The results will be available in *replication_results/flakycat_final_predictions.csv* and the summary printed out in the terminal
+    The results will be available in *replication_results/<WeightsUsed>/Flakify_predictions.csv* and the summary printed out in the terminal
 ---
 
 ### 4. GenAI Usage
