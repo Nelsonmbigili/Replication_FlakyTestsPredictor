@@ -89,22 +89,22 @@ This repository has the following structure
 
     **Note:** Training the model is computationally intensive and was performed on an HPC cluster. To start the process use the following commands
     > 1. **Navigate to the source directory:**
-        ```bash
-        cd src/
-        ```
+    ```bash
+    cd src/
+    ```
     
     > 2. **Run Cross-Validation Training:**
         Execute the following to retrain on both datasets:
-        ```bash
-        bash Flakify_predictor_cross_validation.sh FlakeFlagger
-        bash Flakify_predictor_cross_validation.sh IDoFT
-        ```
+    ```bash
+    bash Flakify_predictor_cross_validation.sh FlakeFlagger
+    bash Flakify_predictor_cross_validation.sh IDoFT
+    ```
 
     > 3. **Run Per-Project Validation:**
-        ```bash
-        bash Flakify_predictor_per_project.sh FlakeFlagger
-        bash Flakify_predictor_per_project.sh IDoFT
-        ```
+    ```bash
+    bash Flakify_predictor_per_project.sh FlakeFlagger
+    bash Flakify_predictor_per_project.sh IDoFT
+    ```
     Results and weights (`.pt` files) are saved in `replication_results/`.
 
     ###  3. **Replication Task 3:** Runing Flakify on FlakyCat Dataset
